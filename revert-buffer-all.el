@@ -71,47 +71,56 @@ This can be useful when updating or checking out branches outside of Emacs."
         ;; do not try to revert non-file buffers such as '*Messages*'.
         (message format-text index count (round (* 100 (/ (float index) count))) filename)
 
-        (if (file-exists-p filename)
-          ;; If the file exists, revert the buffer.
-          (if
-            (with-demoted-errors "Error: %S"
-              (with-current-buffer buf
-                (let ((no-undo (eq buffer-undo-list t)))
+        (cond
+          ((file-exists-p filename)
+            ;; If the file exists, revert the buffer.
+            (cond
+              (
+                (with-demoted-errors "Error: %S"
+                  (with-current-buffer buf
+                    (let ((no-undo (eq buffer-undo-list t)))
 
-                  ;; Disable during revert.
-                  (unless no-undo
-                    (setq buffer-undo-list t)
-                    (setq pending-undo-list nil))
+                      ;; Disable during revert.
+                      (unless no-undo
+                        (setq buffer-undo-list t)
+                        (setq pending-undo-list nil))
 
-                  (unwind-protect
-                    (revert-buffer :ignore-auto :noconfirm)
+                      (unwind-protect
+                        (revert-buffer :ignore-auto :noconfirm)
 
-                    ;; Enable again (always run).
-                    (unless no-undo
-                      ;; It's possible a plugin loads undo data from disk,
-                      ;; check if this is still unset.
-                      (when (and (eq buffer-undo-list t) (null pending-undo-list))
-                        (setq buffer-undo-list nil))))))
-              t)
-            (setq count-final (1+ count-final))
-            (setq count-error (1+ count-error)))
+                        ;; Enable again (always run).
+                        (unless no-undo
+                          ;; It's possible a plugin loads undo data from disk,
+                          ;; check if this is still unset.
+                          (when (and (eq buffer-undo-list t) (null pending-undo-list))
+                            (setq buffer-undo-list nil))))))
+                  t)
+                (setq count-final (1+ count-final)))
+              (t
+                (setq count-error (1+ count-error)))))
 
-          ;; If the file doesn't exist, kill the buffer.
-          ;; No query done when killing buffer.
-          (let ((kill-buffer-query-functions nil))
-            (message "%s closing non-existing file buffer: %s" message-prefix buf)
-            (kill-buffer buf)
-            (setq count-close (1+ count-close))))
+          (t
+            ;; If the file doesn't exist, kill the buffer.
+            ;; No query done when killing buffer.
+            (let ((kill-buffer-query-functions nil))
+              (message "%s closing non-existing file buffer: %s" message-prefix buf)
+              (kill-buffer buf)
+              (setq count-close (1+ count-close)))))
+
         (setq index (1+ index))))
     (message
       (concat
         message-prefix (format " finished with %d buffer(s)" count-final)
-        (if (zerop count-close)
-          ""
-          (format ", %d closed" count-close))
-        (if (zerop count-error)
-          ""
-          (format ", %d error (see message buffer)" count-error))))))
+        (cond
+          ((zerop count-close)
+            "")
+          (t
+            (format ", %d closed" count-close)))
+        (cond
+          ((zerop count-error)
+            "")
+          (t
+            (format ", %d error (see message buffer)" count-error)))))))
 
 (provide 'revert-buffer-all)
 ;;; revert-buffer-all.el ends here

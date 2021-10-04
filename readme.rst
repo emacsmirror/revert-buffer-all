@@ -43,17 +43,8 @@ Evil users may wish to bind this to the leader key:
    (evil-define-key 'normal 'global (kbd "<leader>r") 'revert-buffer-all)
 
 
-Installations
--------------
-
-.. code-block:: elisp
-
-   (use-package revert-buffer-all
-     :commands (revert-buffer-all))
-
-
 Details
--------
+=======
 
 While reverting all buffers may seem like a simple operation, this package handles details such as:
 
@@ -65,3 +56,12 @@ While reverting all buffers may seem like a simple operation, this package handl
   `undo-fu-session <https://gitlab.com/ideasman42/emacs-undo-fu-session>`__.
 
 - When a buffers file no longer exists, the buffer is removed.
+
+
+Installations
+=============
+
+.. code-block:: elisp
+
+   (use-package revert-buffer-all
+     :commands (revert-buffer-all))
