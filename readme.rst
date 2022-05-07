@@ -53,7 +53,7 @@ While reverting all buffers may seem like a simple operation, this package handl
 - Undo data is cleared to prevent accidentally entering the previous buffers state while undoing.
 
 - Support for packages that restore undo data in packages such as
-  `undo-fu-session <https://gitlab.com/ideasman42/emacs-undo-fu-session>`__.
+  `undo-fu-session <https://codeberg.org/ideasman42/emacs-undo-fu-session>`__.
 
 - When a buffers file no longer exists, the buffer is removed.
 
