@@ -53,49 +53,49 @@ This can be useful when updating or checking out branches outside of Emacs."
       (index 1))
 
     (message "%s beginning with %d buffers..." message-prefix count)
-    (while filename-and-buffer-list
-      (pcase-let ((`(,filename . ,buf) (pop filename-and-buffer-list)))
-        ;; Revert only buffers containing files, which are not modified;
-        ;; do not try to revert non-file buffers such as '*Messages*'.
-        (message format-text index count (round (* 100 (/ (float index) count))) filename)
 
-        (cond
-          ((file-exists-p filename)
-            ;; If the file exists, revert the buffer.
-            (cond
-              (
-                (with-demoted-errors "Error: %S"
-                  (with-current-buffer buf
-                    (let ((no-undo (eq buffer-undo-list t)))
+    (pcase-dolist (`(,filename . ,buf) filename-and-buffer-list)
+      ;; Revert only buffers containing files, which are not modified;
+      ;; do not try to revert non-file buffers such as '*Messages*'.
+      (message format-text index count (round (* 100 (/ (float index) count))) filename)
 
-                      ;; Disable during revert.
+      (cond
+        ((file-exists-p filename)
+          ;; If the file exists, revert the buffer.
+          (cond
+            (
+              (with-demoted-errors "Error: %S"
+                (with-current-buffer buf
+                  (let ((no-undo (eq buffer-undo-list t)))
+
+                    ;; Disable during revert.
+                    (unless no-undo
+                      (setq buffer-undo-list t)
+                      (setq pending-undo-list nil))
+
+                    (unwind-protect
+                      (revert-buffer :ignore-auto :noconfirm)
+
+                      ;; Enable again (always run).
                       (unless no-undo
-                        (setq buffer-undo-list t)
-                        (setq pending-undo-list nil))
+                        ;; It's possible a plugin loads undo data from disk,
+                        ;; check if this is still unset.
+                        (when (and (eq buffer-undo-list t) (null pending-undo-list))
+                          (setq buffer-undo-list nil))))))
+                t)
+              (setq count-final (1+ count-final)))
+            (t
+              (setq count-error (1+ count-error)))))
 
-                      (unwind-protect
-                        (revert-buffer :ignore-auto :noconfirm)
+        (t
+          ;; If the file doesn't exist, kill the buffer.
+          ;; No query done when killing buffer.
+          (let ((kill-buffer-query-functions nil))
+            (message "%s closing non-existing file buffer: %s" message-prefix buf)
+            (kill-buffer buf)
+            (setq count-close (1+ count-close)))))
 
-                        ;; Enable again (always run).
-                        (unless no-undo
-                          ;; It's possible a plugin loads undo data from disk,
-                          ;; check if this is still unset.
-                          (when (and (eq buffer-undo-list t) (null pending-undo-list))
-                            (setq buffer-undo-list nil))))))
-                  t)
-                (setq count-final (1+ count-final)))
-              (t
-                (setq count-error (1+ count-error)))))
-
-          (t
-            ;; If the file doesn't exist, kill the buffer.
-            ;; No query done when killing buffer.
-            (let ((kill-buffer-query-functions nil))
-              (message "%s closing non-existing file buffer: %s" message-prefix buf)
-              (kill-buffer buf)
-              (setq count-close (1+ count-close)))))
-
-        (setq index (1+ index))))
+      (setq index (1+ index)))
     (message
       (concat
         message-prefix (format " finished with %d buffer(s)" count-final)
