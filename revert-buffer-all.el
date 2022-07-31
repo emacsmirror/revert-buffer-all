@@ -23,6 +23,10 @@
 
 ;;; Code:
 
+(eval-when-compile
+  ;; For `pcase-dolist'.
+  (require 'pcase))
+
 ;;;###autoload
 (defun revert-buffer-all ()
   "Refresh all open buffers from their respective files.
