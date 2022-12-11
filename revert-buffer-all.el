@@ -77,8 +77,7 @@ This can be useful when updating or checking out branches outside of Emacs."
                       (setq buffer-undo-list t)
                       (setq pending-undo-list nil))
 
-                    (unwind-protect
-                      (revert-buffer :ignore-auto :noconfirm)
+                    (unwind-protect (revert-buffer :ignore-auto :noconfirm)
 
                       ;; Enable again (always run).
                       (unless no-undo
