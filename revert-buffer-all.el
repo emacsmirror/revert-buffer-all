@@ -113,4 +113,8 @@ This can be useful when updating or checking out branches outside of Emacs."
         (format ", %d error (see message buffer)" count-error)))))))
 
 (provide 'revert-buffer-all)
+;; Local Variables:
+;; fill-column: 99
+;; indent-tabs-mode: nil
+;; End:
 ;;; revert-buffer-all.el ends here
