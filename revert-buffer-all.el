@@ -35,26 +35,25 @@ Buffers which no longer exist are closed.
 
 This can be useful when updating or checking out branches outside of Emacs."
   (interactive)
-  (let*
-      ( ;; Pairs of '(filename . buf)'.
-       (filename-and-buffer-list
-        (let ((temp-list nil))
-          (dolist (buf (buffer-list))
-            (let ((filename (buffer-file-name buf)))
-              (when filename
-                (push (cons filename buf) temp-list))))
-          temp-list))
+  (let* ((filename-and-buffer-list
+          ;; Pairs of '(filename . buf)'.
+          (let ((temp-list nil))
+            (dolist (buf (buffer-list))
+              (let ((filename (buffer-file-name buf)))
+                (when filename
+                  (push (cons filename buf) temp-list))))
+            temp-list))
 
-       (message-prefix "Buffer Revert All:")
-       (count (length filename-and-buffer-list))
-       (count-final 0)
-       (count-close 0)
-       (count-error 0)
-       ;; Keep text at a fixed width when redrawing.
-       (format-count (format "%%%dd" (length (number-to-string count))))
-       (format-text
-        (concat message-prefix " reverting [" format-count " of " format-count "] %3d%%: %s"))
-       (index 1))
+         (message-prefix "Buffer Revert All:")
+         (count (length filename-and-buffer-list))
+         (count-final 0)
+         (count-close 0)
+         (count-error 0)
+         ;; Keep text at a fixed width when redrawing.
+         (format-count (format "%%%dd" (length (number-to-string count))))
+         (format-text
+          (concat message-prefix " reverting [" format-count " of " format-count "] %3d%%: %s"))
+         (index 1))
 
     (message "%s beginning with %d buffers..." message-prefix count)
 
