@@ -34,6 +34,7 @@
 Buffers which no longer exist are closed.
 
 This can be useful when updating or checking out branches outside of Emacs."
+  (declare (important-return-value nil))
   (interactive)
   (let* ((filename-and-buffer-list
           ;; Pairs of '(filename . buf)'.
