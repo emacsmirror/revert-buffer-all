@@ -86,9 +86,9 @@ This can be useful when updating or checking out branches outside of Emacs."
                     (when (and (eq buffer-undo-list t) (null pending-undo-list))
                       (setq buffer-undo-list nil))))))
             t)
-          (setq count-final (1+ count-final)))
+          (incf count-final))
          (t
-          (setq count-error (1+ count-error)))))
+          (incf count-error))))
 
        (t
         ;; If the file doesn't exist, kill the buffer.
@@ -96,9 +96,9 @@ This can be useful when updating or checking out branches outside of Emacs."
         (let ((kill-buffer-query-functions nil))
           (message "%s closing non-existing file buffer: %s" message-prefix buf)
           (kill-buffer buf)
-          (setq count-close (1+ count-close)))))
+          (incf count-close))))
 
-      (setq index (1+ index)))
+      (incf index))
     (message
      (concat
       message-prefix (format " finished with %d buffer(s)" count-final)
