@@ -51,7 +51,9 @@
 
 Buffers which no longer exist are closed.
 
-This can be useful when updating or checking out branches outside of Emacs."
+This can be useful when updating or checking out branches outside of Emacs.
+
+Return the number of buffers reloaded or closed."
   (declare (important-return-value nil))
   (interactive)
   (let* ((filename-and-buffer-list
@@ -73,63 +75,72 @@ This can be useful when updating or checking out branches outside of Emacs."
          (format-text
           (concat message-prefix " reverting [" format-count " of " format-count "] %3d%%: %s"))
          (index 1))
+    (cond
+     ((zerop count)
+      (message "%s no file buffers to revert" message-prefix)
+      nil)
+     (t
+      (message "%s beginning with %d buffers..." message-prefix count)
+      (pcase-dolist (`(,filename . ,buf) filename-and-buffer-list)
+        ;; Revert only buffers containing files, which are not modified;
+        ;; do not try to revert non-file buffers such as '*Messages*'.
+        (message format-text index count (round (* 100 (/ (float index) count))) filename)
 
-    (message "%s beginning with %d buffers..." message-prefix count)
-
-    (pcase-dolist (`(,filename . ,buf) filename-and-buffer-list)
-      ;; Revert only buffers containing files, which are not modified;
-      ;; do not try to revert non-file buffers such as '*Messages*'.
-      (message format-text index count (round (* 100 (/ (float index) count))) filename)
-
-      (cond
-       ((file-exists-p filename)
-        ;; If the file exists, revert the buffer.
         (cond
-         ((with-demoted-errors "Error: %S"
-            (with-current-buffer buf
-              (let ((no-undo (eq buffer-undo-list t)))
+         ((file-exists-p filename)
+          ;; If the file exists, revert the buffer.
+          (cond
+           ((with-demoted-errors "Error: %S"
+              (with-current-buffer buf
+                (let ((no-undo (eq buffer-undo-list t)))
 
-                ;; Disable during revert.
-                (unless no-undo
-                  (setq buffer-undo-list t)
-                  (setq pending-undo-list nil))
-
-                (unwind-protect
-                    (revert-buffer :ignore-auto :noconfirm)
-
-                  ;; Enable again (always run).
+                  ;; Disable during revert.
                   (unless no-undo
-                    ;; It's possible a plugin loads undo data from disk,
-                    ;; check if this is still unset.
-                    (when (and (eq buffer-undo-list t) (null pending-undo-list))
-                      (setq buffer-undo-list nil))))))
-            t)
-          (incf count-final))
+                    (setq buffer-undo-list t)
+                    (setq pending-undo-list nil))
+
+                  (unwind-protect
+                      (revert-buffer :ignore-auto :noconfirm)
+
+                    ;; Enable again (always run).
+                    (unless no-undo
+                      ;; It's possible a plugin loads undo data from disk,
+                      ;; check if this is still unset.
+                      (when (and (eq buffer-undo-list t) (null pending-undo-list))
+                        (setq buffer-undo-list nil))))))
+              t)
+            (incf count-final))
+           (t
+            (incf count-error))))
+
          (t
-          (incf count-error))))
+          ;; If the file doesn't exist, kill the buffer.
+          ;; No query done when killing buffer.
+          (let ((kill-buffer-query-functions nil))
+            (message "%s closing non-existing file buffer: %s" message-prefix (buffer-name buf))
+            (kill-buffer buf)
+            (incf count-close))))
 
-       (t
-        ;; If the file doesn't exist, kill the buffer.
-        ;; No query done when killing buffer.
-        (let ((kill-buffer-query-functions nil))
-          (message "%s closing non-existing file buffer: %s" message-prefix (buffer-name buf))
-          (kill-buffer buf)
-          (incf count-close))))
+        (incf index))
 
-      (incf index))
-    (message
-     (concat
-      message-prefix (format " finished with %d buffer(s)" count-final)
-      (cond
-       ((zerop count-close)
-        "")
-       (t
-        (format ", %d closed" count-close)))
-      (cond
-       ((zerop count-error)
-        "")
-       (t
-        (format ", %d error(s), see message buffer" count-error)))))))
+      (message
+       (concat
+        message-prefix (format " finished with %d buffer(s)" count-final)
+        (cond
+         ((zerop count-close)
+          "")
+         (t
+          (format ", %d closed" count-close)))
+        (cond
+         ((zerop count-error)
+          "")
+         (t
+          (format ", %d error(s), see message buffer" count-error)))))
+
+      (let ((count-result (+ count-final count-close)))
+        (when (zerop count-result)
+          (setq count-result nil))
+        count-result)))))
 
 (provide 'revert-buffer-all)
 ;; Local Variables:
