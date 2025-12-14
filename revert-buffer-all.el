@@ -7,7 +7,7 @@
 
 ;; URL: https://codeberg.org/ideasman42/emacs-buffer-revert-all
 ;; Version: 0.1
-;; Package-Requires: ((emacs "24.3"))
+;; Package-Requires: ((emacs "28.1"))
 
 ;;; Commentary:
 
@@ -24,7 +24,7 @@
 ;;; Code:
 
 (eval-when-compile
-  ;; For `pcase-dolist'.
+  ;; For `pcase-dolist', byte-code compilation.
   (require 'pcase))
 
 
@@ -112,7 +112,7 @@ This can be useful when updating or checking out branches outside of Emacs."
         ;; If the file doesn't exist, kill the buffer.
         ;; No query done when killing buffer.
         (let ((kill-buffer-query-functions nil))
-          (message "%s closing non-existing file buffer: %s" message-prefix buf)
+          (message "%s closing non-existing file buffer: %s" message-prefix (buffer-name buf))
           (kill-buffer buf)
           (incf count-close))))
 
@@ -129,7 +129,7 @@ This can be useful when updating or checking out branches outside of Emacs."
        ((zerop count-error)
         "")
        (t
-        (format ", %d error (see message buffer)" count-error)))))))
+        (format ", %d error(s), see message buffer" count-error)))))))
 
 (provide 'revert-buffer-all)
 ;; Local Variables:
